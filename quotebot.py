@@ -8,6 +8,7 @@ import sqlite3
 import os
 import datetime
 import time
+import re
 
 import adapter
 import quoteflags
@@ -48,6 +49,41 @@ if(cur.fetchone()[0] == 0) : {
                     fileExtension text)''')
 }
 
+#Prints a set of quotes. Concatenates quotes into a single message when possible.
+async def printSet(ctx, quoteSet):
+    newSet = []
+    curString = ""
+    delim = "\n"
+    for quote in quoteSet:
+        #Discord will put any attachments or embeds at the end.
+        #To keep quote text and embeds together, immediately print any quotes that will have an embed.
+        if(quote[5]): #Has attachment
+            await printQuote(ctx, quote)
+            time.sleep(0.15)
+            continue
+        if re.search(constants.URL_REGEX, quote[1]):
+            await printQuote(ctx, quote)
+            time.sleep(0.15)
+            continue
+
+        outputString = str(quote[1] or '') + '\n-' + quote[2] + ', ' + quote[4] + ", ID: " + str(quote[0])
+        resultLen = len(curString) + len(delim) + len(outputString)
+        if resultLen > constants.MAX_LENGTH:
+            newSet.append(curString)
+            curString = ""
+
+        if curString == "":
+            curString = outputString
+        else:
+            curString = curString + delim + outputString
+        
+    if curString != "":
+        newSet.append(curString)
+    
+    for quote in newSet:
+        await ctx.channel.send(quote)
+
+#Print a single quote.
 async def printQuote(ctx, output): #output comes from cur.fetchone()
     if(output is None):
         await ctx.channel.send("No valid quotes found.")
@@ -156,9 +192,7 @@ async def quote(ctx, quoteAuthor, numQuotes = 1, *, flags: quoteflags.QuoteFlags
         output = cur.fetchall()
 
         if(output):
-            for quote in output:
-                await printQuote(ctx, quote)
-                time.sleep(0.3)
+            await printSet(ctx, output)
         else:
             await ctx.channel.send("No quotes found.")
         await ctx.message.add_reaction(emoji)
