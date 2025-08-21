@@ -39,8 +39,8 @@ async def on_ready():
         await bot.load_extension(extension)
     
 
-@bot.command(help = "Prints how many times a person has been quoted.")
-async def quotedCount(ctx, quoteAuthor):
+@bot.hybrid_command(help = "Prints how many times a person has been quoted.", aliases=['quotedcount', 'quotedCount'])
+async def quoted_count(ctx, quoteAuthor):
     quoteAuthor = bot.get_cog("Alias").fetchAlias(quoteAuthor)[1]
     cur = con.cursor()
     cur.execute("SELECT COUNT() FROM quotes WHERE quoteAuthor = :name", {"name": quoteAuthor})
@@ -48,7 +48,7 @@ async def quotedCount(ctx, quoteAuthor):
     await ctx.channel.send(quoteAuthor + " has " + str(quoteCount) + " quotes.")
     #await ctx.message.add_reaction(emoji)
 
-@bot.command(help = "Prints the top quoted people.", aliases=['quoteRank'])
+@bot.hybrid_command(help = "Prints the top quoted people.", aliases=['quoterank', 'quoteRank'])
 async def rank(ctx, numquotes=5):
     cur = con.cursor()
     cur.execute("SELECT quoteAuthor, COUNT(quoteAuthor) FROM quotes GROUP BY quoteAuthor ORDER BY COUNT(quoteAuthor) DESC LIMIT :numQuotes", {"numQuotes": numquotes})
@@ -59,24 +59,24 @@ async def rank(ctx, numquotes=5):
     
     await ctx.send(tempString)
 
-@bot.command(help = "Prints the number of times a user has added quotes.")
-async def quoterCount(ctx, quoteRecorder):
+@bot.hybrid_command(help = "Prints the number of times a user has added quotes.", aliases=['quotercount', 'quoterCount'])
+async def quoter_count(ctx, quoteRecorder):
     cur = con.cursor()
     cur.execute("SELECT COUNT() FROM quotes WHERE quoteRecorder = :name", {"name": quoteRecorder})
     quoteCount = cur.fetchone()[0]
     await ctx.channel.send(quoteRecorder + " has recorded " + str(quoteCount) + " quotes.")
     #await ctx.message.add_reaction(emoji)
 
-@bot.command(help = "Prints the total number of quotes saved.")
-async def totalQuotes(ctx):
+@bot.hybrid_command(help = "Prints the total number of quotes saved.", aliases=['totalquotes', 'totalQuotes', 'total_quotes'])
+async def total(ctx):
     cur = con.cursor()
     cur.execute("SELECT COUNT() FROM quotes")
     quoteCount = cur.fetchone()[0]
     await ctx.channel.send(str(quoteCount) + " quotes recorded.")
     #await ctx.message.add_reaction(emoji)
 
-@bot.command(help = "Save a new quote.", aliases=['add','addquote'])
-async def addQuote(ctx, quoteAuthor, *, quote = None):
+@bot.hybrid_command(help = "Save a new quote.", aliases=['addQuote','addquote', 'add_quote'])
+async def add(ctx, quoteAuthor, *, quote = None):
     quoteAuthor = bot.get_cog("Alias").fetchAlias(quoteAuthor)[1]
     try:
         date = datetime.date.today()
